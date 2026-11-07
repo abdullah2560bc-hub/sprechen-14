@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مصحح الألمانية الطلقة ⚡ + رادار (B2 - C1 - C2)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Lexend:wght@500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Tajawal', sans-serif; background: #F4F1EA; color: #1E242B; }
+    .font-heading { font-family: 'Cairo', sans-serif; }
+    .font-arabic { font-family: 'Tajawal', sans-serif; }
+    .font-german { font-family: 'Lexend', system-ui, sans-serif; }
+  </style>
+</head>
+<body class="min-h-screen py-6 px-3 sm:px-6 pb-24">
+  <div id="toastBox" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl bg-[#059669] text-white font-heading font-bold text-sm shadow-2xl"></div>
+  <div class="max-w-[1350px] mx-auto space-y-6">
+    <header class="bg-white border border-[#E2DDD5] rounded-2xl p-4 sm:p-5 shadow-sm flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="text-lg sm:text-2xl font-heading font-black text-[#0F172A]">مصحح الألمانية الطلقة ⚡ + رادار (B2 - C1 - C2) 🇩🇪</h1>
+        <span id="speedBadge" class="px-3 py-1 rounded-xl bg-amber-500/15 text-[#D97706] text-xs font-heading font-black">جاهز 100% ⚡</span>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <input id="apiKeyInput" type="password" placeholder="مفتاح Gemini API (اختياري لـ GitHub)" class="h-10 px-3 rounded-xl border border-slate-300 text-xs font-german" />
+        <button onclick="saveUserApiKey()" class="h-10 px-3.5 rounded-xl bg-[#4F46E5] text-white text-xs font-heading font-bold">حفظ المفتاح</button>
+      </div>
+    </header>
+
+    <section class="bg-white border border-[#BAE6FD] border-r-8 border-r-[#0284C7] rounded-2xl p-5 space-y-4 shadow-sm">
+      <div class="flex items-center gap-3 font-heading font-extrabold text-[#0284C7]">
+        <span class="w-10 h-10 rounded-xl bg-[#0284C7] text-white text-2xl font-black flex items-center justify-center">١</span>
+        <span class="text-base sm:text-lg">منطقة الكتابة والتحدث الصوتي الفوري (ألماني 🇩🇪 + عربي 🇪🇬)</span>
+      </div>
+      <div class="flex flex-wrap lg:flex-nowrap items-center gap-2.5">
+        <input id="mainInput" dir="auto" type="text" placeholder="اكتب أو تحدث بالألماني أو العربي..." class="w-full h-12 border-2 border-slate-300 rounded-xl px-4 text-base font-german focus:outline-none focus:border-[#0284C7]" oninput="onInputChanged(this.value)" />
+        <button id="btnMicDe" onclick="toggleMic('de')" class="h-12 px-4 rounded-xl bg-[#059669] text-white text-xs sm:text-sm font-heading font-bold shrink-0">مايك ألماني 🇩🇪</button>
+        <button id="btnMicAr" onclick="toggleMic('ar')" class="h-12 px-4 rounded-xl bg-[#0284C7] text-white text-xs sm:text-sm font-heading font-bold shrink-0">مايك عربي 🇪🇬</button>
+        <button onclick="triggerCorrectionNow()" class="h-12 px-5 rounded-xl bg-[#D97706] text-white text-sm font-heading font-bold shrink-0">صحح ⚡</button>
+        <button onclick="saveTurnToConversation()" class="h-12 px-4 rounded-xl bg-[#059669] text-white text-sm font-heading font-bold shrink-0">حفظ بالمحادثة +</button>
+      </div>
+    </section>
+
+    <section id="redSection" class="bg-[#FFF1F2] border border-[#FECDD3] border-r-8 border-r-[#E11D48] rounded-2xl p-5 space-y-3 shadow-sm">
+      <div class="flex items-center gap-3 font-heading font-extrabold text-[#E11D48] flex-wrap">
+        <span class="w-10 h-10 rounded-xl bg-[#E11D48] text-white text-2xl font-black flex items-center justify-center">٢</span>
+        <span class="text-base sm:text-lg">النص قبل التصحيح (الكلمات المشطوبة بالأحمر هي التي تم تعديلها)</span>
+      </div>
+      <div id="redStrikethroughBox" dir="ltr" class="p-4 rounded-xl bg-white border border-rose-200 text-left leading-loose flex flex-wrap items-center"></div>
+      <div id="whyWrongBox" class="px-4 py-2.5 rounded-xl bg-white border border-rose-200 text-sm font-bold"></div>
+    </section>
+
+    <section class="bg-[#F2FBF6] border border-[#A7F3D0] border-r-8 border-r-[#059669] rounded-2xl p-5 space-y-4 shadow-sm">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-3 font-heading font-extrabold text-[#059669]">
+          <span class="w-10 h-10 rounded-xl bg-[#059669] text-white text-2xl font-black flex items-center justify-center">٣</span>
+          <span class="text-base sm:text-lg">النص الألماني الصحيح والمحادثة المحفوظة</span>
+        </div>
+        <button onclick="clearAllTurns()" class="px-3 py-1.5 rounded-xl bg-rose-500/10 text-[#E11D48] border border-rose-300 text-xs font-heading font-bold">تفريغ الكل</button>
+      </div>
+      <div id="greenTurnsContainer" class="space-y-4"></div>
+    </section>
+
+    <section class="bg-[#ECFEFF] border border-[#A5F3FC] border-r-8 border-r-[#0891B2] rounded-2xl p-5 space-y-4 shadow-sm">
+      <div class="flex items-center gap-3 font-heading font-extrabold text-[#0891B2]">
+        <span class="w-10 h-10 rounded-xl bg-[#0891B2] text-white text-2xl font-black flex items-center justify-center">٥</span>
+        <span class="text-base sm:text-lg">رادار قواعد الجرامر والتراكيب والـ Redewendungen (B2 / C1 / C2)</span>
+      </div>
+      <div id="radarContainer" class="space-y-3"></div>
+    </section>
+
+    <section class="bg-[#F5F3FF] border border-[#DDD6FE] border-r-8 border-r-[#7C3AED] rounded-2xl p-5 space-y-4 shadow-sm">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-3 font-heading font-extrabold text-[#7C3AED]">
+          <span class="w-10 h-10 rounded-xl bg-[#7C3AED] text-white text-2xl font-black flex items-center justify-center">٦</span>
+          <span class="text-base sm:text-lg">مراجعة الحافظة الدائمة المحفوظة</span>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <input id="clipInput" dir="auto" type="text" placeholder="أضف جملة أو قاعدة للحافظة الدائمة..." class="flex-1 h-11 border border-slate-300 rounded-xl px-4 text-sm bg-white" />
+        <button onclick="addManualClip()" class="h-11 px-5 rounded-xl bg-[#7C3AED] text-white font-heading font-bold text-sm">حفظ بالحافظة +</button>
+      </div>
+      <div id="clipboardContainer" class="space-y-2.5"></div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEYS = {
+      CLIPBOARD: "deutsch_permanent_clipboard_v5",
+      TURNS: "deutsch_permanent_turns_v5",
+      LAST_INPUT: "deutsch_permanent_last_input_v5",
+      API_KEY: "deutsch_user_gemini_api_key"
+    };
+
+    let state = {
+      inputText: JSON.parse(localStorage.getItem(STORAGE_KEYS.LAST_INPUT) || 'null') || "den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest was denn mich wundert dass Du unser Restaurant große machen würdest ",
+      result: {"userSentence":"den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest was denn mich wundert dass Du unser Restaurant große machen würdest","isCorrect":false,"correctedGerman":"Den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest den mich wundert dass Du unser Restaurant große machen würdest was denn mich wundert dass Du unser Restaurant große machen würdest.","arabicMeaning":"جاري التدقيق والترجمة الفورية...","whyWrongAndWhatIsRight":"جاري التحليل السريع...","replacedWords":[],"grammarSegments":[],"isInstantPreview":true},
+      turns: JSON.parse(localStorage.getItem(STORAGE_KEYS.TURNS) || 'null') || [],
+      clips: JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIPBOARD) || 'null') || [{"id":"clip-init-1","text":"Hast du Zeit, damit wir uns kurz unterhalten?","label":"حفظ يدوي / جملة B2","clipCategory":"manual","level":"B2","time":"محفوظ","arabicMeanings":["هل لديك وقت لنتحدث قليلاً؟"],"similarWords":[{"de":"miteinander sprechen","ar":"يتحدث مع بعض"}]}],
+      apiKey: localStorage.getItem(STORAGE_KEYS.API_KEY) || "",
+      micMode: "off"
+    };
+
+    document.getElementById("mainInput").value = state.inputText;
+    document.getElementById("apiKeyInput").value = state.apiKey;
+
+    function notifyToast(msg) {
+      const box = document.getElementById("toastBox");
+      box.innerText = msg;
+      box.classList.remove("hidden");
+      setTimeout(() => box.classList.add("hidden"), 2400);
+    }
+
+    function saveUserApiKey() {
+      const val = document.getElementById("apiKeyInput").value.trim();
+      state.apiKey = val;
+      localStorage.setItem(STORAGE_KEYS.API_KEY, val);
+      notifyToast("تم حفظ المفتاح بنجاح ✓");
+    }
+
+    function cleanPunct(s) {
+      return (s || "").trim().replace(/^[.!?,،؟;:"“”„()\[\]]+|[.!?,،؟;:"“”„()\[\]]+$/g, "");
+    }
+
+    function computeDiff(uSent, cSent) {
+      const u = (uSent || "").trim().split(/\s+/).filter(Boolean).map(w => cleanPunct(w).toLowerCase());
+      const c = (cSent || "").trim().split(/\s+/).filter(Boolean).map(w => cleanPunct(w).toLowerCase());
+      const dp = Array.from({length: u.length + 1}, () => Array(c.length + 1).fill(0));
+      for (let i = u.length - 1; i >= 0; i--) {
+        for (let j = c.length - 1; j >= 0; j--) {
+          dp[i][j] = u[i] === c[j] ? 1 + dp[i+1][j+1] : Math.max(dp[i+1][j], dp[i][j+1]);
+        }
+      }
+      const uSet = new Set(), cSet = new Set();
+      let i = 0, j = 0;
+      while (i < u.length && j < c.length) {
+        if (u[i] === c[j]) { uSet.add(i); cSet.add(j); i++; j++; }
+        else if (dp[i+1][j] >= dp[i][j+1]) i++;
+        else j++;
+      }
+      return { uSet, cSet };
+    }
+
+    function speakDe(text) {
+      if (!("speechSynthesis" in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "de-DE";
+      u.rate = 0.95;
+      window.speechSynthesis.speak(u);
+    }
+
+    async function translateBackup(text, sl, tl) {
+      try {
+        const res = await fetch("https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + sl + "&tl=" + tl + "&dt=t&q=" + encodeURIComponent(text));
+        const data = await res.json();
+        return data[0].map(p => p[0]).join("").trim();
+      } catch (_) { return null; }
+    }
+
+    let debounceTimer = null;
+    function onInputChanged(val) {
+      state.inputText = val;
+      localStorage.setItem(STORAGE_KEYS.LAST_INPUT, JSON.stringify(val));
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => triggerCorrectionNow(), 110);
+    }
+
+    async function triggerCorrectionNow() {
+      const text = state.inputText.trim();
+      if (!text) return;
+      const t0 = performance.now();
+      document.getElementById("speedBadge").innerText = "جاري التصحيح الفوري...";
+
+      let correctedDe = "";
+      let arabicMeaning = "";
+      let whyWrong = "تم تصحيح الجملة وترجمة الكلمات للألمانية.";
+      let rules = [];
+
+      if (state.apiKey) {
+        try {
+          const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + state.apiKey, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text }] }],
+              systemInstruction: { parts: [{ text: 'صحح النص أو ترجمه للألمانية السليمة وأرجع JSON فقط: {"isCorrect":false,"correctedGerman":"...","arabicMeaning":"...","whyWrongAndWhatIsRight":"...","rules":[{"segment":"...","level":"B2","ruleName":"...","explanation":"..."}]}' }] },
+              generationConfig: { responseMimeType: "application/json", temperature: 0.1 }
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const parsed = JSON.parse(data.candidates[0].content.parts[0].text);
+            correctedDe = parsed.correctedGerman || "";
+            arabicMeaning = parsed.arabicMeaning || "";
+            whyWrong = parsed.whyWrongAndWhatIsRight || whyWrong;
+            rules = parsed.rules || [];
+          }
+        } catch (_) {}
+      }
+
+      if (!correctedDe || /[\u0600-\u06FF]/.test(correctedDe)) {
+        correctedDe = await translateBackup(text, "auto", "de") || text;
+      }
+      if (!arabicMeaning) {
+        arabicMeaning = await translateBackup(correctedDe, "de", "ar") || text;
+      }
+
+      state.result = {
+        userSentence: text,
+        isCorrect: false,
+        correctedGerman: correctedDe,
+        arabicMeaning: arabicMeaning,
+        whyWrongAndWhatIsRight: whyWrong,
+        grammarSegments: rules
+      };
+      const ms = Math.round(performance.now() - t0);
+      document.getElementById("speedBadge").innerText = "سرعة الاستجابة: " + ms + "ms ⚡";
+      renderAll();
+    }
+
+    function saveTurnToConversation() {
+      if (!state.result || !state.result.correctedGerman) return;
+      state.turns.push({ ...state.result, id: "t-" + Date.now() });
+      localStorage.setItem(STORAGE_KEYS.TURNS, JSON.stringify(state.turns));
+      notifyToast("تم الحفظ بالمحادثة ✓");
+      renderAll();
+    }
+
+    function clearAllTurns() {
+      state.turns = [];
+      localStorage.setItem(STORAGE_KEYS.TURNS, "[]");
+      renderAll();
+    }
+
+    function saveClip(text, label) {
+      if (!text) return;
+      state.clips = [{ id: "c-" + Date.now(), text, label }, ...state.clips.filter(c => c.text !== text)];
+      localStorage.setItem(STORAGE_KEYS.CLIPBOARD, JSON.stringify(state.clips));
+      navigator.clipboard?.writeText(text);
+      notifyToast("تم النسخ والحفظ في الحافظة الدائمة ✓");
+      renderAll();
+    }
+
+    function addManualClip() {
+      const inp = document.getElementById("clipInput");
+      if (!inp.value.trim()) return;
+      saveClip(inp.value.trim(), "حفظ يدوي");
+      inp.value = "";
+    }
+
+    let recInstance = null;
+    function toggleMic(lang) {
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) return notifyToast("المتصفح لا يدعم المايك");
+      if (state.micMode === lang) {
+        state.micMode = "off";
+        if (recInstance) recInstance.stop();
+        renderMicButtons();
+        return;
+      }
+      if (recInstance) recInstance.stop();
+      state.micMode = lang;
+      renderMicButtons();
+      recInstance = new SpeechRec();
+      recInstance.lang = lang === "ar" ? "ar-EG" : "de-DE";
+      recInstance.continuous = true;
+      recInstance.interimResults = true;
+      const base = state.inputText ? state.inputText + " " : "";
+      recInstance.onresult = (e) => {
+        let chunk = "";
+        for (let i = 0; i < e.results.length; i++) chunk += e.results[i][0].transcript + " ";
+        document.getElementById("mainInput").value = (base + chunk).trim();
+        onInputChanged((base + chunk).trim());
+      };
+      recInstance.onend = () => { if (state.micMode === lang) try { recInstance.start(); } catch(_){} };
+      recInstance.start();
+    }
+
+    function renderMicButtons() {
+      document.getElementById("btnMicDe").innerText = state.micMode === "de" ? "إيقاف الألماني 🔴" : "مايك ألماني 🇩🇪";
+      document.getElementById("btnMicAr").innerText = state.micMode === "ar" ? "إيقاف العربي 🔴" : "مايك عربي 🇪🇬";
+    }
+
+    function renderAll() {
+      const res = state.result;
+      if (res) {
+        const { uSet } = computeDiff(res.userSentence, res.correctedGerman);
+        const uWords = (res.userSentence || "").trim().split(/\s+/).filter(Boolean);
+        document.getElementById("redStrikethroughBox").innerHTML = uWords.map((w, idx) => {
+          const isWrong = !uSet.has(idx) || /[\u0600-\u06FF]/.test(w);
+          return '<span class="inline-block mx-1 my-1 font-german ' + (isWrong ? 'bg-[#FFE4E6] text-[#E11D48] border border-[#FDA4AF] font-bold line-through px-2 py-0.5 rounded-lg' : 'text-slate-800 font-medium') + '">' + w + '</span>';
+        }).join(" ");
+        document.getElementById("whyWrongBox").innerText = "💡 الخلاصة: " + (res.whyWrongAndWhatIsRight || "");
+      }
+
+      const allTurns = [...state.turns, ...(res ? [res] : [])];
+      document.getElementById("greenTurnsContainer").innerHTML = allTurns.map((t, idx) => {
+        const { cSet } = computeDiff(t.userSentence, t.correctedGerman);
+        const cWords = (t.correctedGerman || "").trim().split(/\s+/).filter(Boolean);
+        const wordsHtml = cWords.map((w, wIdx) => {
+          const isCorr = !cSet.has(wIdx);
+          return '<span onclick="speakDe(\'' + w.replace(/'/g, "") + '\')" class="px-2.5 py-1 rounded-xl mx-1 my-1 cursor-pointer inline-block font-german ' + (isCorr ? 'bg-[#059669] text-white font-bold shadow-sm' : 'bg-[#DCFCE7] text-[#064E3B] font-semibold') + '">' + w + '</span>';
+        }).join(" ");
+        return '<div class="rounded-2xl p-4 border-2 border-[#A7F3D0] bg-white space-y-3">' +
+          '<div class="flex justify-between items-center"><span class="font-heading font-bold text-[#059669]">#' + (idx + 1) + '</span>' +
+          '<div class="flex gap-2"><button onclick="speakDe(\'' + (t.correctedGerman || "").replace(/'/g, "") + '\')" class="px-3 py-1 rounded-xl bg-[#059669] text-white text-xs font-bold">نطق 🔊</button>' +
+          '<button onclick="saveClip(\'' + (t.correctedGerman || "").replace(/'/g, "") + '\', \'جملة\')" class="px-3 py-1 rounded-xl border text-xs font-bold">نسخ وحفظ 📋</button></div></div>' +
+          '<div dir="ltr" class="text-lg font-german text-left leading-loose flex flex-wrap">' + wordsHtml + '</div>' +
+          '<div class="text-sm font-bold text-slate-700 border-t pt-2">الترجمة: ' + (t.arabicMeaning || "") + '</div></div>';
+      }).join("");
+
+      const rules = res?.grammarSegments || [];
+      document.getElementById("radarContainer").innerHTML = rules.length ? rules.map((r) => (
+        '<div class="p-4 rounded-2xl bg-white border border-cyan-200 space-y-1">' +
+        '<div class="flex justify-between"><span class="font-german font-bold text-[#0891B2]" dir="ltr">' + (r.segment || "") + ' (' + (r.level || "B2") + ')</span>' +
+        '<button onclick="saveClip(\'' + (r.segment || "").replace(/'/g, "") + '\', \'قاعدة\')" class="text-xs px-2.5 py-1 rounded-lg bg-[#7C3AED] text-white font-bold">نسخ للحافظة</button></div>' +
+        '<div class="font-heading font-bold text-sm">' + (r.ruleName || "") + '</div>' +
+        '<div class="text-xs text-slate-600">' + (r.explanation || "") + '</div></div>'
+      )).join("") : '<div class="text-sm text-slate-500">اكتب جملة لالتقاط قواعد وتراكيب B2-C2.</div>';
+
+      document.getElementById("clipboardContainer").innerHTML = state.clips.map((c, i) => (
+        '<div class="p-3.5 rounded-xl bg-white border border-violet-200 flex justify-between items-center">' +
+        '<span class="font-german font-bold text-[#7C3AED]" dir="auto">' + (i + 1) + '. ' + c.text + '</span>' +
+        '<button onclick="navigator.clipboard.writeText(\'' + c.text.replace(/'/g, "") + '\'); notifyToast(\'تم النسخ ✓\')" class="px-3 py-1 border rounded-lg text-xs font-bold">نسخ</button></div>'
+      )).join("");
+    }
+
+    renderAll();
+  </script>
+</body>
+</html>
